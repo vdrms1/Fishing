@@ -14,11 +14,21 @@ namespace FishingFun
         public static ILog logger = LogManager.GetLogger("Fishbot");
 
         private ConsoleKey castKey;
+        private ConsoleKey rodKey;
+        private ConsoleKey lureKey;
         private List<ConsoleKey> tenMinKey;
         private IBobberFinder bobberFinder;
         private IBiteWatcher biteWatcher;
         private bool isEnabled;
+        private int maxFinshingMinutes = 60;
+        private Stopwatch totalTimeStopWatch = new Stopwatch();
         private Stopwatch stopwatch = new Stopwatch();
+        private Stopwatch lureStopwatch = new Stopwatch();
+
+        public ConsoleKey RodKey { get => rodKey; set => rodKey = value; }
+        public ConsoleKey LureKey { get => lureKey; set => lureKey = value; }
+
+        private static Random random = new Random();
 
         public event EventHandler<FishingEvent> FishingEventHandler;
 
@@ -28,6 +38,9 @@ namespace FishingFun
             this.biteWatcher = biteWatcher;
             this.castKey = castKey;
             this.tenMinKey = tenMinKey;
+
+            this.rodKey = ConsoleKey.D2;
+            this.lureKey = ConsoleKey.D3;
 
             logger.Info("FishBot Created.");
 
@@ -39,11 +52,22 @@ namespace FishingFun
             biteWatcher.FishingEventHandler = (e) => FishingEventHandler?.Invoke(this, e);
 
             isEnabled = true;
+     
+            // Enable total time stopwatch
+            totalTimeStopWatch.Start();
+
+            // Equip the rod
+            WowProcess.PressKey(rodKey);
+
+            // Enable lure stopwatch
+            lureStopwatch.Start();
+            Lure.applyLure(rodKey, lureKey);
 
             while (isEnabled)
             {
                 try
-                {
+                {                    
+                    checkLureTimer();
                     logger.Info($"Pressing key {castKey} to Cast.");
 
                     FishingEventHandler?.Invoke(this, new FishingEvent { Action = FishingAction.Cast });
@@ -52,6 +76,7 @@ namespace FishingFun
                     Watch(2000);
 
                     WaitForBite();
+                    checkForStopTimer();
                 }
                 catch (Exception e)
                 {
@@ -63,6 +88,43 @@ namespace FishingFun
             logger.Error("Bot has Stopped.");
         }
 
+
+        public void checkForStopTimer()
+        {
+            TimeSpan ts = totalTimeStopWatch.Elapsed;
+            int elapsedMinutes = ts.Minutes;
+
+            logger.Info($"Elapsed {elapsedMinutes} out of {maxFinshingMinutes}mins.");
+
+            if (elapsedMinutes > maxFinshingMinutes)
+            {               
+                Stop();
+            }
+
+            
+        }
+
+        public void checkLureTimer()
+        {
+            int lureTimer = 10;
+
+            TimeSpan ts = lureStopwatch.Elapsed;
+            int elapsedMinutes = ts.Minutes;
+            
+            logger.Info($"Checking the lure timer.");            
+
+            if (elapsedMinutes > lureTimer)
+            {
+                Lure.applyLure(rodKey, lureKey);
+                lureStopwatch.Restart();
+            } else
+            {
+                logger.Info($"Lure still active for {lureTimer - elapsedMinutes} min");
+            }
+
+
+        }
+
         public void SetCastKey(ConsoleKey castKey)
         {
             this.castKey = castKey;
@@ -71,8 +133,7 @@ namespace FishingFun
         private void Watch(int milliseconds)
         {
             bobberFinder.Reset();
-            stopwatch.Reset();
-            stopwatch.Start();
+            stopwatch.Restart();
             while (stopwatch.ElapsedMilliseconds < milliseconds)
             {
                 bobberFinder.Find();
@@ -83,6 +144,7 @@ namespace FishingFun
         public void Stop()
         {
             isEnabled = false;
+            totalTimeStopWatch.Reset();
             logger.Error("Bot is Stopping...");
         }
 
@@ -121,6 +183,7 @@ namespace FishingFun
 
         private DateTime StartTime = DateTime.Now;
 
+
         private void PressTenMinKey()
         {
             if ((DateTime.Now - StartTime).TotalMinutes > 10 && tenMinKey.Count > 0)
@@ -139,10 +202,10 @@ namespace FishingFun
 
         private void Loot(Point bobberPosition)
         {
-            Sleep(1500);
+            Sleep(900 + random.Next(0, 225));
             logger.Info($"Right clicking mouse to Loot.");
             WowProcess.RightClickMouse(logger, bobberPosition);
-            Sleep(1000);
+            Sleep(1000 + random.Next(0, 125));
         }
 
         public static void Sleep(int ms)

@@ -15,8 +15,13 @@ namespace FishingFun
 
         private const UInt32 WM_KEYDOWN = 0x0100;
         private const UInt32 WM_KEYUP = 0x0101;
-        private static ConsoleKey lastKey;
         private static Random random = new Random();
+        public enum keyState
+        {
+            KEYDOWN = 0,
+            EXTENDEDKEY = 1,
+            KEYUP = 2
+        };
 
         public static bool IsWowClassic()
         {
@@ -44,13 +49,101 @@ namespace FishingFun
         }
 
         [DllImport("user32.dll")]
-        public static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
-
-        [DllImport("user32.dll")]
         static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out uint ProcessId);
+
+        // Re-write to a different API 
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+
+        // Simulate keyboard clicks        
+        [DllImport("user32.dll")]
+        private static extern bool keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+        // Send keyboard actions
+        private static bool SendKeyboardAction(ConsoleKey key, keyState state)
+        {
+            return SendKeyboardAction((byte)key.GetHashCode(), state);
+        }
+
+        private static bool SendKeyboardAction(byte key, keyState state)
+        {
+            return keybd_event(key, 0, (uint)state, (UIntPtr)0);
+        }
+
+        private static void PressKeboyardKey(ConsoleKey key)
+        {
+            SendKeyboardAction(key, keyState.KEYDOWN);
+            Thread.Sleep(50 + random.Next(0, 125));
+            SendKeyboardAction(key, keyState.KEYUP);
+        }
+
+        // This function is tend to be used only with the WOW Process 
+        public static void PressKey(ConsoleKey key)
+        {
+            var activeProcess = GetActiveProcess();
+            var oldPosition = System.Windows.Forms.Cursor.Position;
+
+            SetWowWindowActive();
+            PressKeboyardKey(key);
+
+            SetOldWindowActive(activeProcess, oldPosition);
+
+        }
+
+        static void SetWowWindowActive()
+        {
+            var wowProcess = WowProcess.Get();
+            var activeProcess = GetActiveProcess();
+            if (wowProcess != null && activeProcess.Id != wowProcess.Id)
+            {
+                SetForegroundWindow(wowProcess.MainWindowHandle);
+            }
+
+        }
+
+        static void SetOldWindowActive(Process oldProcess, System.Drawing.Point oldPosition)
+        {
+
+            var activeProcess = GetActiveProcess();
+            if (activeProcess.Id != oldProcess.Id)
+            {
+                logger.Info("Setting focus to the old window and mouse position");
+                SetForegroundWindow(oldProcess.MainWindowHandle);
+                System.Windows.Forms.Cursor.Position = oldPosition;
+            }           
+        }
+
+
+        static void MouseRightClick(System.Drawing.Point position)
+        {
+
+            const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+            const int MOUSEEVENTF_RIGHTUP = 0x10;
+
+            var activeProcess = GetActiveProcess();
+            var oldPosition = System.Windows.Forms.Cursor.Position;
+            SetWowWindowActive();
+
+           // var output = MouseMoveCalculations.calculateMovePoints(System.Windows.Forms.Cursor.Position, position);
+
+            // Move mouse to the position we want
+            System.Windows.Forms.Cursor.Position = position;
+            Thread.Sleep(10);
+            mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+
+
+            SetOldWindowActive(activeProcess, oldPosition);
+
+        }
+        // Re-write END
 
         static Process GetActiveProcess()
         {
@@ -60,89 +153,10 @@ namespace FishingFun
             return Process.GetProcessById((int)pid);
         }
 
-        private static void KeyDown(ConsoleKey key)
-        {
-            lastKey = key;
-            var wowProcess = Get();
-            if (wowProcess != null)
-            {
-                PostMessage(wowProcess.MainWindowHandle, WM_KEYDOWN, (int)key, 0);
-            }
-        }
-
-        private static void KeyUp()
-        {
-            KeyUp(lastKey);
-        }
-
-        public static void PressKey(ConsoleKey key)
-        {
-            KeyDown(key);
-            Thread.Sleep(50 + random.Next(0, 75));
-            KeyUp(key);
-        }
-
-        public static void KeyUp(ConsoleKey key)
-        {
-            var wowProcess = Get();
-            if (wowProcess != null)
-            {
-                PostMessage(wowProcess.MainWindowHandle, WM_KEYUP, (int)key, 0);
-            }
-        }
-
         public static void RightClickMouse(ILog logger, System.Drawing.Point position)
         {
-            var activeProcess = GetActiveProcess();
-            var wowProcess = WowProcess.Get();
-            if (wowProcess != null)
-            {
-                var oldPosition = System.Windows.Forms.Cursor.Position;
-
-                System.Windows.Forms.Cursor.Position = position;
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONDOWN, Keys.VK_RMB, 0);
-                Thread.Sleep(30 + random.Next(0, 47));
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
-
-                RefocusOnOldScreen(logger, activeProcess, wowProcess, oldPosition);
-            }
+            MouseRightClick(position);
         }
 
-        public static void RightClickMouse()
-        {
-            var activeProcess = GetActiveProcess();
-            var wowProcess = WowProcess.Get();
-            if (wowProcess != null)
-            {
-                var oldPosition = System.Windows.Forms.Cursor.Position;
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONDOWN, Keys.VK_RMB, 0);
-                Thread.Sleep(30 + random.Next(0, 47));
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
-            }
-        }
-
-        private static void RefocusOnOldScreen(ILog logger, Process activeProcess, Process wowProcess, System.Drawing.Point oldPosition)
-        {
-            try
-            {
-                if (activeProcess.MainWindowTitle != wowProcess.MainWindowTitle)
-                {
-                    // get focus back on this screen
-                    PostMessage(activeProcess.MainWindowHandle, Keys.WM_RBUTTONDOWN, Keys.VK_RMB, 0);
-                    Thread.Sleep(30);
-                    PostMessage(activeProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
-
-                    KeyDown(ConsoleKey.Escape);
-                    Thread.Sleep(30);
-                    KeyUp(ConsoleKey.Escape);
-
-                    System.Windows.Forms.Cursor.Position = oldPosition;
-                }
-            }
-            catch(Exception ex)
-            {
-                logger.Error(ex.Message);
-            }
-        }
     }
 }

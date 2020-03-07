@@ -1,3 +1,20 @@
+# Fork changes:
+
+##### Platform changes:
+- Rewrite the wow process layer to use different methods (requires window to be active now)
+- Improve the window focusing, can be anywhere on the screen , can be resized the bot will still work - however it's recommended to try to have the 
+the fishing area as big as possible so the bot can detect the bobber better
+
+
+#### Tweaks
+- Add cut off timer (hardcoded)
+- Equip the rod (hardcoded key)
+- Apply the lure (hardcoded keys and timer)
+
+TODO:
+- Logout after cut off
+- Anti AFK features
+
 
 # Fishing Fun - A World of Warcraft Bot
 
