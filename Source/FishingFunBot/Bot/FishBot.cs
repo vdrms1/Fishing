@@ -52,7 +52,7 @@ namespace FishingFun
             biteWatcher.FishingEventHandler = (e) => FishingEventHandler?.Invoke(this, e);
 
             isEnabled = true;
-
+     
             // Enable total time stopwatch
             totalTimeStopWatch.Start();
 
