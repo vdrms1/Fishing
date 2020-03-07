@@ -15,7 +15,6 @@ namespace FishingFun
 
         private const UInt32 WM_KEYDOWN = 0x0100;
         private const UInt32 WM_KEYUP = 0x0101;
-        private static ConsoleKey lastKey;
         private static Random random = new Random();
         public enum keyState
         {
@@ -69,17 +68,17 @@ namespace FishingFun
         private static extern bool keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
 
         // Send keyboard actions
-        public static bool SendKeyboardAction(ConsoleKey key, keyState state)
+        private static bool SendKeyboardAction(ConsoleKey key, keyState state)
         {
             return SendKeyboardAction((byte)key.GetHashCode(), state);
         }
 
-        public static bool SendKeyboardAction(byte key, keyState state)
+        private static bool SendKeyboardAction(byte key, keyState state)
         {
             return keybd_event(key, 0, (uint)state, (UIntPtr)0);
         }
 
-        public static void PressKeboyardKey(ConsoleKey key)
+        private static void PressKeboyardKey(ConsoleKey key)
         {
             SendKeyboardAction(key, keyState.KEYDOWN);
             Thread.Sleep(50 + random.Next(0, 125));
@@ -103,7 +102,7 @@ namespace FishingFun
         {
             var wowProcess = WowProcess.Get();
             var activeProcess = GetActiveProcess();
-            if (wowProcess != null && wowProcess != activeProcess)
+            if (wowProcess != null && activeProcess.Id != wowProcess.Id)
             {
                 SetForegroundWindow(wowProcess.MainWindowHandle);
             }
@@ -114,9 +113,9 @@ namespace FishingFun
         {
 
             var activeProcess = GetActiveProcess();
-            if (activeProcess != oldProcess)
+            if (activeProcess.Id != oldProcess.Id)
             {
-                logger.Info("Reseting the window:");
+                logger.Info("Setting focus to the old window and mouse position");
                 SetForegroundWindow(oldProcess.MainWindowHandle);
                 System.Windows.Forms.Cursor.Position = oldPosition;
             }           
@@ -133,8 +132,11 @@ namespace FishingFun
             var oldPosition = System.Windows.Forms.Cursor.Position;
             SetWowWindowActive();
 
+           // var output = MouseMoveCalculations.calculateMovePoints(System.Windows.Forms.Cursor.Position, position);
+
             // Move mouse to the position we want
             System.Windows.Forms.Cursor.Position = position;
+            Thread.Sleep(10);
             mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
 
 
