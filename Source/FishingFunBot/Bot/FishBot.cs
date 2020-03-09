@@ -92,7 +92,7 @@ namespace FishingFun
         public void checkForStopTimer()
         {
             TimeSpan ts = totalTimeStopWatch.Elapsed;
-            int elapsedMinutes = ts.Minutes;
+            int elapsedMinutes = ts.TotalMinutes;
 
             logger.Info($"Elapsed {elapsedMinutes} out of {maxFinshingMinutes}mins.");
 
