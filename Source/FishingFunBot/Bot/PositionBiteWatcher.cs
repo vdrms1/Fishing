@@ -69,11 +69,13 @@ namespace FishingFun
             {
                 // System.Console.WriteLine($"Checking c:{currentAmpltitude} - l:{lastAmpltitude} = {currentAmpltitude - lastAmpltitude} > {amplitudeTreashHold}");
                 if (currentAmpltitude - lastAmpltitude >= amplitudeTreashHold)
-                {                    
+                {
+                    logger.Info("Detected using positive threshold  clasifier");
                     return true;
                 }
                 //System.Console.WriteLine($"Checking c:{currentAmpltitude} - l2:{last2Ampltitude} = {currentAmpltitude - last2Ampltitude} > {amplitudeTreashHold}");
-                if (currentAmpltitude - last2Ampltitude >= amplitudeTreashHold) {                
+                if (currentAmpltitude - last2Ampltitude >= amplitudeTreashHold) {
+                    logger.Info("Detected using positive threshold  clasifier");
                     return true;
                 }
             }
