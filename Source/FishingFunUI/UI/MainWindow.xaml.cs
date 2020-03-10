@@ -22,7 +22,7 @@ namespace FishingFun
         private ReticleDrawer reticleDrawer = new ReticleDrawer();
 
         private FishingBot? bot;
-        private int strikeValue = 7; // this is the depth the bobber must go for the bite to be detected
+        private int strikeValue = 5; // this is the depth the bobber must go for the bite to be detected
         private bool setImageBackgroundColour = true;
         private Timer WindowSizeChangedTimer;
         private System.Threading.Thread? botThread;

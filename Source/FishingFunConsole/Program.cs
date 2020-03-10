@@ -12,7 +12,7 @@ namespace Powershell
         {
             log4net.Config.XmlConfigurator.Configure(new FileStream("log4net.config", FileMode.Open));
 
-            int strikeValue = 7;
+            int strikeValue = 5;
 
             var pixelClassifier = new PixelClassifier();
             pixelClassifier.SetConfiguration(WowProcess.IsWowClassic());
