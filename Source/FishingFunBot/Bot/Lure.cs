@@ -19,7 +19,8 @@ namespace FishingFun
             Thread.Sleep(250);
             WowProcess.PressKey(rodKey);
             // Wait for the lure to be applied
-            Thread.Sleep(8000);
+            // We also need longer sleep for re-applying to be not too soon
+            Thread.Sleep(15000);
         }
 
     }

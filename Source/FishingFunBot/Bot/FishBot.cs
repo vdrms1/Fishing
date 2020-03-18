@@ -21,6 +21,7 @@ namespace FishingFun
         private IBiteWatcher biteWatcher;
         private bool isEnabled;
         private int maxFinshingMinutes = 60;
+        private int lureTimer = 5;
         private Stopwatch totalTimeStopWatch = new Stopwatch();
         private Stopwatch stopwatch = new Stopwatch();
         private Stopwatch lureStopwatch = new Stopwatch();
@@ -105,15 +106,15 @@ namespace FishingFun
         }
 
         public void checkLureTimer()
-        {
-            int lureTimer = 10;
+        {            
 
             TimeSpan ts = lureStopwatch.Elapsed;
             int elapsedMinutes = ts.Minutes;
+            int elapsedSeconds = ts.Seconds;
             
-            logger.Info($"Checking the lure timer.");            
+            logger.Info($"Checking the lure timer.");
 
-            if (elapsedMinutes > lureTimer)
+            if ((elapsedMinutes >= lureTimer && elapsedSeconds > 30) || elapsedMinutes > lureTimer)
             {
                 Lure.applyLure(rodKey, lureKey);
                 lureStopwatch.Restart();

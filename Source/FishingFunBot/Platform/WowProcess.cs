@@ -136,8 +136,9 @@ namespace FishingFun
 
             // Move mouse to the position we want
             System.Windows.Forms.Cursor.Position = position;
-            Thread.Sleep(10);
+            Thread.Sleep(50);
             mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+            Thread.Sleep(100);
 
 
             SetOldWindowActive(activeProcess, oldPosition);
