@@ -16,7 +16,7 @@ namespace FishingFun
         // yPositionsAll have all recorded positions which could be used for a different kind of clasifier 
         private List<int> amplitudes = new List<int>();
         private int strikeValue;
-        private int amplitudeTreashHold = 4;
+        private int amplitudeTreashHold = 5;
         private int yDiff;
         private TimedAction? timer;
 

@@ -63,7 +63,6 @@
     <Compile Include="Bot\SearchBobberFinder.cs" />
     <Compile Include="Platform\Keys.cs" />
     <Compile Include="Platform\TimedAction.cs" />
-    <Compile Include="Platform\MouseMoveCalculations.cs" />
     <Compile Include="Platform\WowProcess.cs" />
     <Compile Include="Platform\WowScreen.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

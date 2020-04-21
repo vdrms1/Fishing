@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace FishingFun
@@ -16,12 +17,13 @@ namespace FishingFun
         private ConsoleKey castKey;
         private ConsoleKey rodKey;
         private ConsoleKey lureKey;
+        private ConsoleKey hsKey;
         private List<ConsoleKey> tenMinKey;
         private IBobberFinder bobberFinder;
         private IBiteWatcher biteWatcher;
         private bool isEnabled;
-        private int maxFinshingMinutes = 60;
-        private int lureTimer = 5;
+        private int maxFinshingMinutes = 45;
+        private int lureTimer = 10;
         private Stopwatch totalTimeStopWatch = new Stopwatch();
         private Stopwatch stopwatch = new Stopwatch();
         private Stopwatch lureStopwatch = new Stopwatch();
@@ -33,6 +35,10 @@ namespace FishingFun
 
         public event EventHandler<FishingEvent> FishingEventHandler;
 
+        [DllImport("Powrprof.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        public static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
+
+
         public FishingBot(IBobberFinder bobberFinder, IBiteWatcher biteWatcher, ConsoleKey castKey, List<ConsoleKey> tenMinKey)
         {
             this.bobberFinder = bobberFinder;
@@ -42,6 +48,7 @@ namespace FishingFun
 
             this.rodKey = ConsoleKey.D2;
             this.lureKey = ConsoleKey.D3;
+            this.hsKey = ConsoleKey.D9;
 
             logger.Info("FishBot Created.");
 
@@ -100,9 +107,14 @@ namespace FishingFun
             if (elapsedMinutes > maxFinshingMinutes)
             {               
                 Stop();
+                WowProcess.PressKey(hsKey);
+                Thread.Sleep(20000);
+                // Sleep computer
+                SetSuspendState(false, true, true);
+
             }
 
-            
+
         }
 
         public void checkLureTimer()
