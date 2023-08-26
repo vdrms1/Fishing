@@ -2,40 +2,18 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Windows;
+using System.Windows.Controls.Primitives;
+using System.Windows.Threading;
+using Point = System.Drawing.Point;
 
 namespace FishingFun
 {
-    public partial class ColourConfiguration : System.Windows.Window
+    public partial class ColourConfiguration : Window
     {
         private readonly IPixelClassifier pixelClassifier;
 
         private Bitmap ScreenCapture = new Bitmap(1, 1);
-
-        public int RedValue { get; set; }
-
-        public int ColourMultiplier
-        {
-            get
-            {
-                return (int)(pixelClassifier.ColourMultiplier * 100);
-            }
-            set
-            {
-                pixelClassifier.ColourMultiplier = ((double)value) / 100;
-            }
-        }
-
-        public int ColourClosenessMultiplier
-        {
-            get
-            {
-                return (int)(pixelClassifier.ColourClosenessMultiplier * 100);
-            }
-            set
-            {
-                pixelClassifier.ColourClosenessMultiplier = ((double)value) / 100;
-            }
-        }
 
         public ColourConfiguration(IPixelClassifier pixelClassifier)
         {
@@ -44,25 +22,34 @@ namespace FishingFun
 
             InitializeComponent();
 
-            this.DataContext = this;
+            DataContext = this;
+        }
+
+        public int RedValue { get; set; }
+
+        public int ColourMultiplier
+        {
+            get => (int)(pixelClassifier.ColourMultiplier * 100);
+            set => pixelClassifier.ColourMultiplier = (double)value / 100;
+        }
+
+        public int ColourClosenessMultiplier
+        {
+            get => (int)(pixelClassifier.ColourClosenessMultiplier * 100);
+            set => pixelClassifier.ColourClosenessMultiplier = (double)value / 100;
         }
 
         private void RenderColour(bool renderMatchedArea)
         {
-            var bitmap = new System.Drawing.Bitmap(256, 256);
+            var bitmap = new Bitmap(256, 256);
 
             var points = new List<Point>();
 
             for (var b = 0; b < 256; b++)
+            for (var g = 0; g < 256; g++)
             {
-                for (var g = 0; g < 256; g++)
-                {
-                    if (pixelClassifier.IsMatch((byte)this.RedValue, (byte)g, (byte)b))
-                    {
-                        points.Add(new Point(b, g));
-                    }
-                    bitmap.SetPixel(b, g, System.Drawing.Color.FromArgb(this.RedValue, g, b));
-                }
+                if (pixelClassifier.IsMatch((byte)RedValue, (byte)g, (byte)b)) points.Add(new Point(b, g));
+                bitmap.SetPixel(b, g, Color.FromArgb(RedValue, g, b));
             }
 
             if (ScreenCapture == null)
@@ -71,38 +58,33 @@ namespace FishingFun
                 renderMatchedArea = true;
             }
 
-            this.ColourDisplay.Source = bitmap.ToBitmapImage();
-            this.WowScreenshot.Source = ScreenCapture.ToBitmapImage();
+            ColourDisplay.Source = bitmap.ToBitmapImage();
+            WowScreenshot.Source = ScreenCapture.ToBitmapImage();
 
             if (renderMatchedArea)
             {
                 Dispatch(() =>
                 {
                     MarkEdgeOfRedArea(bitmap, points);
-                    this.ColourDisplay.Source = bitmap.ToBitmapImage();
+                    ColourDisplay.Source = bitmap.ToBitmapImage();
                 });
 
                 Dispatch(() =>
                 {
-                    Bitmap bmp = new Bitmap(ScreenCapture);
+                    var bmp = new Bitmap(ScreenCapture);
                     MarkRedOnBitmap(bmp);
-                    this.WowScreenshot.Source = bmp.ToBitmapImage();
+                    WowScreenshot.Source = bmp.ToBitmapImage();
                 });
             }
         }
 
         private void MarkRedOnBitmap(Bitmap bmp)
         {
-            for (int x = 0; x < bmp.Width; x++)
+            for (var x = 0; x < bmp.Width; x++)
+            for (var y = 0; y < bmp.Height; y++)
             {
-                for (int y = 0; y < bmp.Height; y++)
-                {
-                    var pixel = bmp.GetPixel(x, y);
-                    if (this.pixelClassifier.IsMatch(pixel.R, pixel.G, pixel.B))
-                    {
-                        bmp.SetPixel(x, y, Color.Red);
-                    }
-                }
+                var pixel = bmp.GetPixel(x, y);
+                if (pixelClassifier.IsMatch(pixel.R, pixel.G, pixel.B)) bmp.SetPixel(x, y, Color.Red);
             }
         }
 
@@ -110,36 +92,37 @@ namespace FishingFun
         {
             foreach (var point in points)
             {
-                var pointsClose = points.Count(p => (p.X == point.X && (p.Y == point.Y - 1 || p.Y == point.Y + 1)) || (p.Y == point.Y && (p.X == point.X - 1 || p.X == point.X + 1)));
-                if (pointsClose < 4)
-                {
-                    bitmap.SetPixel(point.X, point.Y, Color.White);
-                }
+                var pointsClose = points.Count(p =>
+                    (p.X == point.X && (p.Y == point.Y - 1 || p.Y == point.Y + 1)) ||
+                    (p.Y == point.Y && (p.X == point.X - 1 || p.X == point.X + 1)));
+                if (pointsClose < 4) bitmap.SetPixel(point.X, point.Y, Color.White);
             }
         }
 
-        private void Red_ValueChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+        private void Red_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            this.LabelRed.Content = this.RedValue;
+            LabelRed.Content = RedValue;
             RenderColour(false);
         }
 
-        private void ColourMultiplier_ValueChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+        private void ColourMultiplier_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            this.LabelColourMultiplier.Text = $"Red multiplied by {this.pixelClassifier.ColourMultiplier} must be greater than green and blue.";
+            LabelColourMultiplier.Text =
+                $"Red multiplied by {pixelClassifier.ColourMultiplier} must be greater than green and blue.";
         }
 
-        private void ColourClosenessMultiplier_ValueChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+        private void ColourClosenessMultiplier_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            this.LabelColourClosenessMultiplier.Text = $"How close Green and Blue need to be to each other: {this.pixelClassifier.ColourClosenessMultiplier}";
+            LabelColourClosenessMultiplier.Text =
+                $"How close Green and Blue need to be to each other: {pixelClassifier.ColourClosenessMultiplier}";
         }
 
-        private void Slider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        private void Slider_DragCompleted(object sender, DragCompletedEventArgs e)
         {
             RenderColour(true);
         }
 
-        private void Capture_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void Capture_Click(object sender, RoutedEventArgs e)
         {
             ScreenCapture = WowScreen.GetBitmap();
             RenderColour(true);
@@ -147,8 +130,8 @@ namespace FishingFun
 
         private void Dispatch(Action action)
         {
-            System.Windows.Application.Current?.Dispatcher.BeginInvoke((Action)(() => action()));
-            System.Windows.Application.Current?.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Background, new Action(delegate { }));
+            Application.Current?.Dispatcher.BeginInvoke((Action)(() => action()));
+            Application.Current?.Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
         }
     }
 }

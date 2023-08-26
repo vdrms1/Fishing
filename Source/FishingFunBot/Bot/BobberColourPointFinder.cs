@@ -5,8 +5,8 @@ namespace FishingFun
 {
     public class BobberColourPointFinder : IBobberFinder, IImageProvider
     {
-        private Color targetColor;
         private Bitmap bmp = new Bitmap(1, 1);
+        private Color targetColor;
 
         public BobberColourPointFinder(Color targetColor)
         {
@@ -14,11 +14,9 @@ namespace FishingFun
             BitmapEvent += (s, e) => { };
         }
 
-        public event EventHandler<BobberBitmapEvent> BitmapEvent;
-
         public Point Find()
         {
-            this.bmp = WowScreen.GetBitmap();
+            bmp = WowScreen.GetBitmap();
 
             const int targetOffset = 15;
 
@@ -36,23 +34,21 @@ namespace FishingFun
 
             var pos = new Point(0, 0);
 
-            for (int i = widthLower; i < widthHigher; i++)
+            for (var i = widthLower; i < widthHigher; i++)
+            for (var j = heightLower; j < heightHigher; j++)
             {
-                for (int j = heightLower; j < heightHigher; j++)
+                pos.X = i;
+                pos.Y = j;
+                var colorAt = WowScreen.GetColorAt(pos, bmp);
+                if (colorAt.R > targetRedLb &&
+                    colorAt.R < targetRedHb &&
+                    colorAt.B > targetBlueLb &&
+                    colorAt.B < targetBlueHb &&
+                    colorAt.G > targetGreenLb &&
+                    colorAt.G < targetGreenHb)
                 {
-                    pos.X = i;
-                    pos.Y = j;
-                    var colorAt = WowScreen.GetColorAt(pos, bmp);
-                    if (colorAt.R > targetRedLb &&
-                        colorAt.R < targetRedHb &&
-                        colorAt.B > targetBlueLb &&
-                        colorAt.B < targetBlueHb &&
-                        colorAt.G > targetGreenLb &&
-                        colorAt.G < targetGreenHb)
-                    {
-                        BitmapEvent?.Invoke(this, new BobberBitmapEvent { Point = new Point(i, j), Bitmap = bmp });
-                        return WowScreen.GetScreenPositionFromBitmapPostion(pos);
-                    }
+                    BitmapEvent?.Invoke(this, new BobberBitmapEvent { Point = new Point(i, j), Bitmap = bmp });
+                    return WowScreen.GetScreenPositionFromBitmapPostion(pos);
                 }
             }
 
@@ -61,13 +57,15 @@ namespace FishingFun
             return Point.Empty;
         }
 
+        public void Reset()
+        {
+        }
+
+        public event EventHandler<BobberBitmapEvent> BitmapEvent;
+
         public Bitmap GetBitmap()
         {
             return bmp;
-        }
-
-        public void Reset()
-        {
         }
     }
 }

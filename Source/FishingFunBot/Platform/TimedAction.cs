@@ -5,19 +5,11 @@ namespace FishingFun
 {
     public class TimedAction
     {
-        public int actionTimeoutMs;
-        public int maxTimeSecs;
         public Action<TimedAction> action;
-        public Stopwatch stopwatch = new Stopwatch();
+        public int actionTimeoutMs;
         public Stopwatch maxTime = new Stopwatch();
-
-        public int ElapsedSecs
-        {
-            get
-            {
-                return (int)maxTime.Elapsed.TotalSeconds;
-            }
-        }
+        public int maxTimeSecs;
+        public Stopwatch stopwatch = new Stopwatch();
 
         public TimedAction(Action<TimedAction> action, int actionTimeoutMs, int maxTimeSecs)
         {
@@ -27,6 +19,8 @@ namespace FishingFun
             stopwatch.Start();
             maxTime.Start();
         }
+
+        public int ElapsedSecs => (int)maxTime.Elapsed.TotalSeconds;
 
         public void ExecuteNow()
         {

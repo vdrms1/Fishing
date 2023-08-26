@@ -5,10 +5,9 @@ namespace FishingFun
 {
     public interface IBiteWatcher
     {
+        Action<FishingEvent> FishingEventHandler { set; get; }
         void Reset(Point InitialBobberPosition);
 
         bool IsBite(Point currentBobberPosition);
-
-        Action<FishingEvent> FishingEventHandler { set; get; }
     }
 }

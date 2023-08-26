@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace FishingFun
 {
     public partial class KeyBindChooser : UserControl
     {
-        public ConsoleKey CastKey { get; set; } = ConsoleKey.D4;
-
-        private static string Filename = "keybind.txt";
+        private static readonly string Filename = "keybind.txt";
 
         public EventHandler CastKeyChanged;
 
@@ -21,6 +21,8 @@ namespace FishingFun
             ReadConfiguration();
         }
 
+        public ConsoleKey CastKey { get; set; } = ConsoleKey.D4;
+
         private void ReadConfiguration()
         {
             try
@@ -29,14 +31,14 @@ namespace FishingFun
                 {
                     var contents = File.ReadAllText(Filename);
                     CastKey = (ConsoleKey)int.Parse(contents);
-                    KeyBind.Text = GetCastKeyText(this.CastKey);
+                    KeyBind.Text = GetCastKeyText(CastKey);
                 }
             }
             catch (Exception e)
             {
-                System.Diagnostics.Debug.WriteLine(e.Message);
+                Debug.WriteLine(e.Message);
                 CastKey = ConsoleKey.D4;
-                KeyBind.Text = GetCastKeyText(this.CastKey);
+                KeyBind.Text = GetCastKeyText(CastKey);
             }
         }
 
@@ -50,7 +52,7 @@ namespace FishingFun
             KeyBind.Text = "";
         }
 
-        private void KeyBind_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        private void KeyBind_KeyUp(object sender, KeyEventArgs e)
         {
             var key = e.Key.ToString();
             ProcessKeybindText(key);
@@ -61,25 +63,23 @@ namespace FishingFun
             if (!string.IsNullOrEmpty(key))
             {
                 ConsoleKey ck;
-                if (Enum.TryParse<ConsoleKey>(key, out ck))
+                if (Enum.TryParse(key, out ck))
                 {
-                    this.CastKey = ck;
+                    CastKey = ck;
                     WriteConfiguration();
                     CastKeyChanged?.Invoke(this, null);
                     return;
                 }
             }
+
             KeyBind.Text = "";
         }
 
         private string GetCastKeyText(ConsoleKey ck)
         {
-            string keyText = ck.ToString();
-            if (keyText.Length == 1) { return keyText; }
-            if (keyText.StartsWith("D") && keyText.Length == 2)
-            {
-                return keyText.Substring(1, 1);
-            }
+            var keyText = ck.ToString();
+            if (keyText.Length == 1) return keyText;
+            if (keyText.StartsWith("D") && keyText.Length == 2) return keyText.Substring(1, 1);
             return "?";
         }
     }

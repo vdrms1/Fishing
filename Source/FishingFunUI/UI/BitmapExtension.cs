@@ -1,13 +1,16 @@
-﻿using System.Drawing.Imaging;
+﻿using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Brush = System.Windows.Media.Brush;
+using Color = System.Windows.Media.Color;
 
 namespace FishingFun
 {
     public static class BitmapExtension
     {
-        public static BitmapImage ToBitmapImage(this System.Drawing.Bitmap bitmap)
+        public static BitmapImage ToBitmapImage(this Bitmap bitmap)
         {
             using (var memory = new MemoryStream())
             {
@@ -26,20 +29,18 @@ namespace FishingFun
             }
         }
 
-        public static Brush GetBackgroundColourBrush(this System.Drawing.Bitmap bitmap)
+        public static Brush GetBackgroundColourBrush(this Bitmap bitmap)
         {
             long r = 0, g = 0, b = 0;
             long pixels = bitmap.Width * bitmap.Height;
 
-            for (int x = 0; x < bitmap.Width; x++)
+            for (var x = 0; x < bitmap.Width; x++)
+            for (var y = 0; y < bitmap.Height; y++)
             {
-                for (int y = 0; y < bitmap.Height; y++)
-                {
-                    var pixel = bitmap.GetPixel(x, y);
-                    r += pixel.R;
-                    g += pixel.G;
-                    b += pixel.B;
-                }
+                var pixel = bitmap.GetPixel(x, y);
+                r += pixel.R;
+                g += pixel.G;
+                b += pixel.B;
             }
 
             return new SolidColorBrush(Color.FromArgb(255, (byte)(r / pixels), (byte)(g / pixels), (byte)(b / pixels)));

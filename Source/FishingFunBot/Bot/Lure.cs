@@ -1,10 +1,6 @@
-﻿using log4net;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using System.Threading;
+using log4net;
 
 namespace FishingFun
 {
@@ -22,6 +18,5 @@ namespace FishingFun
             // We also need longer sleep for re-applying to be not too soon
             Thread.Sleep(15000);
         }
-
     }
 }

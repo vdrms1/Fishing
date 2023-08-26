@@ -4,33 +4,15 @@ using System.Linq;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace FishingFun
 {
     public partial class FlyingFishAnimation : UserControl
     {
-        private Timer t = new Timer { Interval = 30 };
-        private Random random = new Random();
-        private List<Fish> fish = new List<Fish>();
-        public int AnimationWidth { get; set; }
-        public int AnimationHeight { get; set; }
-
-        private class Fish
-        {
-            public Image image;
-            public int rotationAngle;
-            public int rotationStep;
-            public int speedY;
-            public int speedX;
-            public int X;
-            public int Y;
-            public int index;
-
-            public Fish(Image image)
-            {
-                this.image = image;
-            }
-        }
+        private readonly List<Fish> fish = new List<Fish>();
+        private readonly Random random = new Random();
+        private readonly Timer t = new Timer { Interval = 30 };
 
         public FlyingFishAnimation()
         {
@@ -38,20 +20,23 @@ namespace FishingFun
 
             t.Elapsed += MoveFishes;
 
-            for (int i = 0; i < 30; i++)
+            for (var i = 0; i < 30; i++)
             {
                 fish.Add(CreateFish(random, i));
-                this.FishGrid.Children.Add(fish.Last().image);
+                FishGrid.Children.Add(fish.Last().image);
             }
         }
+
+        public int AnimationWidth { get; set; }
+        public int AnimationHeight { get; set; }
 
         public void Start()
         {
             fish.ForEach(f =>
             {
-                f.X = random.Next((int)this.AnimationWidth);
-                f.Y = random.Next((int)this.AnimationHeight);
-                f.image.Visibility = f.index * 33 < this.AnimationHeight ? Visibility.Visible : Visibility.Collapsed;
+                f.X = random.Next(AnimationWidth);
+                f.Y = random.Next(AnimationHeight);
+                f.image.Visibility = f.index * 33 < AnimationHeight ? Visibility.Visible : Visibility.Collapsed;
             });
 
             t.Start();
@@ -60,10 +45,7 @@ namespace FishingFun
         public void Stop()
         {
             t.Stop();
-            fish.ForEach(f =>
-            {
-                f.image.Visibility = Visibility.Collapsed;
-            });
+            fish.ForEach(f => { f.image.Visibility = Visibility.Collapsed; });
         }
 
         private Fish CreateFish(Random r, int i)
@@ -71,7 +53,7 @@ namespace FishingFun
             var fish = new Fish(
                 new Image
                 {
-                    Source = this.FishImage.Source,
+                    Source = FishImage.Source,
                     Height = 100,
                     Width = 100,
                     HorizontalAlignment = HorizontalAlignment.Left,
@@ -81,8 +63,8 @@ namespace FishingFun
             {
                 rotationAngle = r.Next(359),
                 rotationStep = 30 - r.Next(60),
-                speedY = (r.Next(30) + 30),
-                speedX = (30 - r.Next(60)),
+                speedY = r.Next(30) + 30,
+                speedX = 30 - r.Next(60),
                 index = i
             };
 
@@ -97,8 +79,8 @@ namespace FishingFun
             {
                 fish.ForEach(f =>
                 {
-                    f.X = KeepInBounds(f.X + f.speedX, (int)this.AnimationWidth);
-                    f.Y = KeepInBounds(f.Y + f.speedY, (int)this.AnimationHeight);
+                    f.X = KeepInBounds(f.X + f.speedX, AnimationWidth);
+                    f.Y = KeepInBounds(f.Y + f.speedY, AnimationHeight);
                     //f.rotationAngle = KeepInBounds(f.rotationAngle + f.rotationStep, 360);
                     f.image.Margin = new Thickness(f.X, f.Y, 0, 0);
                     //f.image.RenderTransform = new RotateTransform(f.rotationAngle);
@@ -114,7 +96,24 @@ namespace FishingFun
         private void Dispatch(Action action)
         {
             Application.Current?.Dispatcher.BeginInvoke((Action)(() => action()));
-            Application.Current?.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Background, new Action(delegate { }));
+            Application.Current?.Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+        }
+
+        private class Fish
+        {
+            public readonly Image image;
+            public int index;
+            public int rotationAngle;
+            public int rotationStep;
+            public int speedX;
+            public int speedY;
+            public int X;
+            public int Y;
+
+            public Fish(Image image)
+            {
+                this.image = image;
+            }
         }
     }
 }

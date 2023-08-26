@@ -1,42 +1,39 @@
-﻿using log4net;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
+using System.Windows.Forms;
+using log4net;
 
-#nullable enable
 namespace FishingFun
 {
     public static class WowProcess
     {
+        private const uint WM_KEYDOWN = 0x0100;
+        private const uint WM_KEYUP = 0x0101;
         public static ILog logger = LogManager.GetLogger("Fishbot");
-
-        private const UInt32 WM_KEYDOWN = 0x0100;
-        private const UInt32 WM_KEYUP = 0x0101;
         private static ConsoleKey lastKey;
-        private static Random random = new Random();
+        private static readonly Random random = new Random();
 
         public static bool IsWowClassic()
         {
             var wowProcess = Get();
-            return wowProcess != null ? wowProcess.ProcessName.ToLower().Contains("classic") : false; ;
+            return wowProcess != null ? wowProcess.ProcessName.ToLower().Contains("classic") : false;
         }
 
         //Get the wow-process, if success returns the process else null
         public static Process? Get(string name = "")
         {
-            var names = string.IsNullOrEmpty(name) ? new List<string> { "Wow", "WowClassic", "Wow-64" } : new List<string> { name };
+            var names = string.IsNullOrEmpty(name)
+                ? new List<string> { "Wow", "WowClassic", "Wow-64" }
+                : new List<string> { name };
 
             var processList = Process.GetProcesses();
             foreach (var p in processList)
-            {
                 if (names.Contains(p.ProcessName))
-                {
                     return p;
-                }
-            }
 
             logger.Error($"Failed to find the wow process, tried: {string.Join(", ", names)}");
 
@@ -44,17 +41,17 @@ namespace FishingFun
         }
 
         [DllImport("user32.dll")]
-        public static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
+        public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
 
         [DllImport("user32.dll")]
-        static extern IntPtr GetForegroundWindow();
+        private static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out uint ProcessId);
 
-        static Process GetActiveProcess()
+        private static Process GetActiveProcess()
         {
-            IntPtr hwnd = GetForegroundWindow();
+            var hwnd = GetForegroundWindow();
             uint pid;
             GetWindowThreadProcessId(hwnd, out pid);
             return Process.GetProcessById((int)pid);
@@ -64,10 +61,7 @@ namespace FishingFun
         {
             lastKey = key;
             var wowProcess = Get();
-            if (wowProcess != null)
-            {
-                PostMessage(wowProcess.MainWindowHandle, WM_KEYDOWN, (int)key, 0);
-            }
+            if (wowProcess != null) PostMessage(wowProcess.MainWindowHandle, WM_KEYDOWN, (int)key, 0);
         }
 
         private static void KeyUp()
@@ -85,21 +79,18 @@ namespace FishingFun
         public static void KeyUp(ConsoleKey key)
         {
             var wowProcess = Get();
-            if (wowProcess != null)
-            {
-                PostMessage(wowProcess.MainWindowHandle, WM_KEYUP, (int)key, 0);
-            }
+            if (wowProcess != null) PostMessage(wowProcess.MainWindowHandle, WM_KEYUP, (int)key, 0);
         }
 
-        public static void RightClickMouse(ILog logger, System.Drawing.Point position)
+        public static void RightClickMouse(ILog logger, Point position)
         {
             var activeProcess = GetActiveProcess();
-            var wowProcess = WowProcess.Get();
+            var wowProcess = Get();
             if (wowProcess != null)
             {
-                var oldPosition = System.Windows.Forms.Cursor.Position;
+                var oldPosition = Cursor.Position;
 
-                System.Windows.Forms.Cursor.Position = position;
+                Cursor.Position = position;
                 PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONDOWN, Keys.VK_RMB, 0);
                 Thread.Sleep(30 + random.Next(0, 47));
                 PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
@@ -111,17 +102,18 @@ namespace FishingFun
         public static void RightClickMouse()
         {
             var activeProcess = GetActiveProcess();
-            var wowProcess = WowProcess.Get();
+            var wowProcess = Get();
             if (wowProcess != null)
             {
-                var oldPosition = System.Windows.Forms.Cursor.Position;
+                var oldPosition = Cursor.Position;
                 PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONDOWN, Keys.VK_RMB, 0);
                 Thread.Sleep(30 + random.Next(0, 47));
                 PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
             }
         }
 
-        private static void RefocusOnOldScreen(ILog logger, Process activeProcess, Process wowProcess, System.Drawing.Point oldPosition)
+        private static void RefocusOnOldScreen(ILog logger, Process activeProcess, Process wowProcess,
+            Point oldPosition)
         {
             try
             {
@@ -136,7 +128,7 @@ namespace FishingFun
                     Thread.Sleep(30);
                     KeyUp(ConsoleKey.Escape);
 
-                    System.Windows.Forms.Cursor.Position = oldPosition;
+                    Cursor.Position = oldPosition;
                 }
             }
             catch (Exception ex)

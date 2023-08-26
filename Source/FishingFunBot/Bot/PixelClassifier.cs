@@ -1,5 +1,5 @@
-﻿using log4net;
-using System;
+﻿using System;
+using log4net;
 
 namespace FishingFun
 {
@@ -20,8 +20,8 @@ namespace FishingFun
             if (isWowClasic)
             {
                 LogManager.GetLogger("Fishbot").Info("Wow Classic configuration");
-                this.ColourMultiplier = 1;
-                this.ColourClosenessMultiplier = 1;
+                ColourMultiplier = 1;
+                ColourClosenessMultiplier = 1;
             }
             else
             {
@@ -31,7 +31,7 @@ namespace FishingFun
 
         private bool isBigger(byte red, byte other)
         {
-            return (red * ColourMultiplier) > other;
+            return red * ColourMultiplier > other;
         }
 
         private bool areClose(byte color1, byte color2)

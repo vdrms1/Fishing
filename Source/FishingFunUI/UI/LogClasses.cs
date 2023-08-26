@@ -3,17 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 
-#nullable enable
 namespace FishingFun
 {
     public class LogEntry : PropertyChangedBase
     {
         public DateTime DateTime { get; set; }
 
-        public string Time
-        {
-            get { return DateTime.ToLongTimeString(); }
-        }
+        public string Time => DateTime.ToLongTimeString();
 
         public int Index { get; set; }
 
@@ -35,7 +31,7 @@ namespace FishingFun
             {
                 if (PropertyChanged != null)
                 {
-                    PropertyChangedEventHandler handler = PropertyChanged;
+                    var handler = PropertyChanged;
                     if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
                 }
             }));
