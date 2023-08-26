@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using FishingFunBot.Bot.Interfaces;
+using FishingFunBot.Platform;
 using log4net;
 
-namespace FishingFun
+namespace FishingFunBot.Bot
 {
     public class PositionBiteWatcher : IBiteWatcher
     {

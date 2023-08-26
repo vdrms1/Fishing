@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:FishingFun"
+        xmlns:ui="clr-namespace:FishingFun.UI"
         mc:Ignorable="d" Background="#FFFFFF" Title="Google Chrome" Height="550" Width="800"
         Icon="/Chrome;component/Resources/fishingfun.ico">
     <Window.Resources>
@@ -30,7 +31,7 @@
             </Setter>
         </Style>
 
-        <DataTemplate DataType="{x:Type local:LogEntry}">
+        <DataTemplate DataType="{x:Type ui:LogEntry}">
             <Grid IsSharedSizeScope="True">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition SharedSizeGroup="Index" Width="Auto" />

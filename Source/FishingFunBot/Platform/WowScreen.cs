@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 
-namespace FishingFun
+namespace FishingFunBot.Platform
 {
     public static class WowScreen
     {

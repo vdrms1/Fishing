@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Threading;
+using FishingFunBot.Platform;
 using log4net;
 
-namespace FishingFun
+namespace FishingFunBot.Bot
 {
     public static class Lure
     {

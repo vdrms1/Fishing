@@ -6,7 +6,7 @@ using System.Windows.Media.Imaging;
 using Brush = System.Windows.Media.Brush;
 using Color = System.Windows.Media.Color;
 
-namespace FishingFun
+namespace FishingFun.UI
 {
     public static class BitmapExtension
     {

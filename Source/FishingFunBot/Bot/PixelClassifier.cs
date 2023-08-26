@@ -1,7 +1,8 @@
 ﻿using System;
+using FishingFunBot.Bot.Interfaces;
 using log4net;
 
-namespace FishingFun
+namespace FishingFunBot.Bot
 {
     public class PixelClassifier : IPixelClassifier
     {

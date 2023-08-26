@@ -5,6 +5,9 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
+using FishingFun.UI;
+using FishingFunBot.Bot.Interfaces;
+using FishingFunBot.Platform;
 using Point = System.Drawing.Point;
 
 namespace FishingFun

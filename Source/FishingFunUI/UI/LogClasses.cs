@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 
-namespace FishingFun
+namespace FishingFun.UI
 {
     public class LogEntry : PropertyChangedBase
     {

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using FishingFunBot.Bot.Interfaces;
+using FishingFunBot.Platform;
 using log4net;
 
-namespace FishingFun
+namespace FishingFunBot.Bot
 {
     public class SearchBobberFinder : IBobberFinder, IImageProvider
     {

@@ -4,11 +4,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
+using FishingFunBot.Bot.Interfaces;
+using FishingFunBot.Platform;
 using log4net;
 using log4net.Appender;
 using log4net.Repository.Hierarchy;
 
-namespace FishingFun
+namespace FishingFunBot.Bot
 {
     public class FishingBot
     {
