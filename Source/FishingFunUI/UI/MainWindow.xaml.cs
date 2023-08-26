@@ -154,7 +154,6 @@ namespace FishingFun.UI
         private void Play_Click(object sender, RoutedEventArgs e)
         {
             if (bot != null) return;
-            WowProcess.PressKey(ConsoleKey.Spacebar);
             Thread.Sleep(1500);
 
             SetButtonStates(false);
