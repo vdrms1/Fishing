@@ -9,7 +9,7 @@ namespace FishingFunBot.Bot
     {
         public static ILog logger = LogManager.GetLogger("Fishbot");
 
-        public static void applyLure(ConsoleKey rodKey, ConsoleKey lureKey)
+        public static void ApplyLure(ConsoleKey rodKey, ConsoleKey lureKey)
         {
             logger.Info($"Applying lure with key {lureKey} on rod key {rodKey}.");
             WowProcess.PressKey(lureKey);

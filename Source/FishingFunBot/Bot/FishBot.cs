@@ -14,9 +14,9 @@ namespace FishingFunBot.Bot
 {
     public class FishingBot
     {
-        public static ILog logger = LogManager.GetLogger("Fishbot");
-
-        private static readonly Random random = new Random();
+        public static readonly ILog logger = LogManager.GetLogger("Fishbot");
+        
+        private static readonly Random Random = new Random();
         private readonly IBiteWatcher biteWatcher;
         private readonly IBobberFinder bobberFinder;
 
@@ -27,7 +27,7 @@ namespace FishingFunBot.Bot
         private readonly int lureTimer = 10;
         private readonly int maxFinshingMinutes = 45;
 
-        private DateTime StartTime = DateTime.Now;
+        private DateTime startTime = DateTime.Now;
         private readonly Stopwatch stopwatch = new Stopwatch();
         private readonly List<ConsoleKey> tenMinKey;
         private readonly Stopwatch totalTimeStopWatch = new Stopwatch();
@@ -50,18 +50,18 @@ namespace FishingFunBot.Bot
             FishingEventHandler += (s, e) => { };
         }
 
-        public ConsoleKey RodKey { get; set; }
+        private ConsoleKey RodKey { get; set; }
 
-        public ConsoleKey LureKey { get; set; }
+        private ConsoleKey LureKey { get; set; }
 
         public event EventHandler<FishingEvent> FishingEventHandler;
 
         [DllImport("Powrprof.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        public static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
+        private static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
 
         public void Start()
         {
-            biteWatcher.FishingEventHandler = e => FishingEventHandler?.Invoke(this, e);
+            biteWatcher.FishingEventHandler = e => FishingEventHandler(this, e);
 
             isEnabled = true;
 
@@ -73,12 +73,12 @@ namespace FishingFunBot.Bot
 
             // Enable lure stopwatch
             lureStopwatch.Start();
-            Lure.applyLure(RodKey, LureKey);
+            Lure.ApplyLure(RodKey, LureKey);
 
             while (isEnabled)
                 try
                 {
-                    checkLureTimer();
+                    CheckLureTimer();
                     logger.Info($"Pressing key {castKey} to Cast.");
 
                     FishingEventHandler?.Invoke(this, new FishingEvent { Action = FishingAction.Cast });
@@ -87,7 +87,7 @@ namespace FishingFunBot.Bot
                     Watch(2000);
 
                     WaitForBite();
-                    checkForStopTimer();
+                    CheckForStopTimer();
                 }
                 catch (Exception e)
                 {
@@ -98,8 +98,7 @@ namespace FishingFunBot.Bot
             logger.Error("Bot has Stopped.");
         }
 
-
-        public void checkForStopTimer()
+        private void CheckForStopTimer()
         {
             var ts = totalTimeStopWatch.Elapsed;
             var elapsedMinutes = (int)ts.TotalMinutes;
@@ -116,7 +115,7 @@ namespace FishingFunBot.Bot
             }
         }
 
-        public void checkLureTimer()
+        private void CheckLureTimer()
         {
             var ts = lureStopwatch.Elapsed;
             var elapsedMinutes = ts.Minutes;
@@ -126,7 +125,7 @@ namespace FishingFunBot.Bot
 
             if ((elapsedMinutes >= lureTimer && elapsedSeconds > 30) || elapsedMinutes > lureTimer)
             {
-                Lure.applyLure(RodKey, LureKey);
+                Lure.ApplyLure(RodKey, LureKey);
                 lureStopwatch.Restart();
             }
             else
@@ -135,9 +134,9 @@ namespace FishingFunBot.Bot
             }
         }
 
-        public void SetCastKey(ConsoleKey castKey)
+        public void SetCastKey(ConsoleKey consoleKey)
         {
-            this.castKey = castKey;
+            castKey = consoleKey;
         }
 
         private void Watch(int milliseconds)
@@ -158,14 +157,10 @@ namespace FishingFunBot.Bot
         private void WaitForBite()
         {
             bobberFinder.Reset();
-
             var bobberPosition = FindBobber();
             if (bobberPosition == Point.Empty) return;
-
             biteWatcher.Reset(bobberPosition);
-
             logger.Info("Bobber start position: " + bobberPosition);
-
             var timedTask = new TimedAction(a => { logger.Info("Fishing timed out!"); }, 25 * 1000, 25);
 
             // Wait for the bobber to move
@@ -188,47 +183,41 @@ namespace FishingFunBot.Bot
 
         private void PressTenMinKey()
         {
-            if ((DateTime.Now - StartTime).TotalMinutes > 10 && tenMinKey.Count > 0)
-            {
-                StartTime = DateTime.Now;
-                logger.Info($"Pressing key {tenMinKey} to run a macro.");
-
-                FishingEventHandler?.Invoke(this, new FishingEvent { Action = FishingAction.Cast });
-
-                foreach (var key in tenMinKey) WowProcess.PressKey(key);
-            }
+            if (!((DateTime.Now - startTime).TotalMinutes > 10) || tenMinKey.Count <= 0) return;
+            startTime = DateTime.Now;
+            logger.Info($"Pressing key {tenMinKey} to run a macro.");
+            FishingEventHandler(this, new FishingEvent { Action = FishingAction.Cast });
+            foreach (var key in tenMinKey) WowProcess.PressKey(key);
         }
 
         private void Loot(Point bobberPosition)
         {
-            Sleep(900 + random.Next(0, 225));
+            Sleep(900 + Random.Next(0, 225));
             logger.Info("Right clicking mouse to Loot.");
             WowProcess.RightClickMouse(logger, bobberPosition);
-            Sleep(1000 + random.Next(0, 125));
+            Sleep(1000 + Random.Next(0, 125));
         }
 
-        public static void Sleep(int ms)
+        private static void Sleep(int ms)
         {
             var sw = new Stopwatch();
             sw.Start();
             while (sw.Elapsed.TotalMilliseconds < ms)
             {
                 FlushBuffers();
-                //System.Windows.Application.Current?.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Background, new ThreadStart(delegate { }));
                 Thread.Sleep(100);
             }
         }
 
-        public static void FlushBuffers()
+        private static void FlushBuffers()
         {
             var log = LogManager.GetLogger("Fishbot");
-            var logger = log.Logger as Logger;
-            if (logger != null)
-                foreach (var appender in logger.Appenders)
-                {
-                    var buffered = appender as BufferingAppenderSkeleton;
-                    if (buffered != null) buffered.Flush();
-                }
+            if (!(log.Logger is Logger logger)) return;
+            foreach (var appender in logger.Appenders)
+            {
+                var buffered = appender as BufferingAppenderSkeleton;
+                buffered?.Flush();
+            }
         }
 
         private Point FindBobber()

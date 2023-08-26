@@ -6,11 +6,11 @@ namespace FishingFunBot.Platform
 {
     public static class WowScreen
     {
-        private static Rectangle wowWindowdBounds;
+        private static Rectangle _wowWindowdBounds;
 
 
         [DllImport("user32.dll")]
-        public static extern bool GetWindowRect(IntPtr hwnd, ref Rect rectangle);
+        private static extern bool GetWindowRect(IntPtr hwnd, ref Rect rectangle);
 
         public static Color GetColorAt(Point pos, Bitmap bmp)
         {
@@ -27,32 +27,23 @@ namespace FishingFunBot.Platform
             var rect = new Rect();
             GetWindowRect(handle, ref rect);
             var bounds = new Rectangle(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
-            wowWindowdBounds = bounds;
+            _wowWindowdBounds = bounds;
             var result = new Bitmap(bounds.Width / 2, bounds.Height / 2);
 
-            using (var graphics = Graphics.FromImage(result))
-            {
-                graphics.CopyFromScreen(new Point(bounds.Left + bounds.Width / 4, bounds.Top + bounds.Height / 4),
-                    Point.Empty, bounds.Size);
-            }
+            using var graphics = Graphics.FromImage(result);
+            graphics.CopyFromScreen(new Point(bounds.Left + bounds.Width / 4, bounds.Top + bounds.Height / 4),
+                Point.Empty, bounds.Size);
 
             return result;
-
-
-            //var bmpScreen = new Bitmap(Screen.PrimaryScreen.Bounds.Width / 2, (Screen.PrimaryScreen.Bounds.Height / 2)-100);
-            //var graphics = Graphics.FromImage(bmpScreen);
-            //graphics.CopyFromScreen(Screen.PrimaryScreen.Bounds.Width / 4, Screen.PrimaryScreen.Bounds.Height / 4, 0, 0, bmpScreen.Size);
-            //graphics.Dispose();
-            //return bmpScreen;
         }
 
         public static Point GetScreenPositionFromBitmapPostion(Point pos)
         {
-            return new Point(pos.X += wowWindowdBounds.Left + wowWindowdBounds.Width / 4,
-                pos.Y += wowWindowdBounds.Top + wowWindowdBounds.Height / 4);
+            return new Point(pos.X += _wowWindowdBounds.Left + _wowWindowdBounds.Width / 4,
+                pos.Y += _wowWindowdBounds.Top + _wowWindowdBounds.Height / 4);
         }
 
-        public struct Rect
+        private struct Rect
         {
             public int Left { get; set; }
             public int Top { get; set; }

@@ -6,19 +6,17 @@ using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
-using FishingFun.UI;
 using FishingFunBot.Bot;
 using FishingFunBot.Bot.Interfaces;
 using FishingFunBot.Platform;
 using log4net.Appender;
 using log4net.Core;
 using log4net.Repository.Hierarchy;
-using Point = System.Drawing.Point;
 using Timer = System.Timers.Timer;
 
-namespace FishingFun
+namespace FishingFun.UI
 {
-    public partial class MainWindow : Window, IAppender
+    public partial class MainWindow : IAppender
     {
         private readonly IBiteWatcher biteWatcher;
 
@@ -26,12 +24,11 @@ namespace FishingFun
 
         private FishingBot? bot;
         private Thread? botThread;
-        private Point lastPoint = Point.Empty;
         private readonly IPixelClassifier pixelClassifier;
         private readonly ReticleDrawer reticleDrawer = new ReticleDrawer();
         private bool setImageBackgroundColour = true;
         private readonly int strikeValue = 5; // this is the depth the bobber must go for the bite to be detected
-        private readonly Timer WindowSizeChangedTimer;
+        private readonly Timer windowSizeChangedTimer;
 
         public MainWindow()
         {
@@ -45,13 +42,12 @@ namespace FishingFun
 
             bobberFinder = new SearchBobberFinder(pixelClassifier);
 
-            var imageProvider = bobberFinder as IImageProvider;
-            if (imageProvider != null) imageProvider.BitmapEvent += ImageProvider_BitmapEvent;
+            if (bobberFinder is IImageProvider imageProvider) imageProvider.BitmapEvent += ImageProvider_BitmapEvent;
 
             biteWatcher = new PositionBiteWatcher(strikeValue);
 
-            WindowSizeChangedTimer = new Timer { AutoReset = false, Interval = 100 };
-            WindowSizeChangedTimer.Elapsed += SizeChangedTimer_Elapsed;
+            windowSizeChangedTimer = new Timer { AutoReset = false, Interval = 100 };
+            windowSizeChangedTimer.Elapsed += SizeChangedTimer_Elapsed;
             CardGrid.SizeChanged += MainWindow_SizeChanged;
             Closing += (s, e) => botThread?.Abort();
 
@@ -62,7 +58,7 @@ namespace FishingFun
             };
         }
 
-        public ObservableCollection<LogEntry> LogEntries { get; set; }
+        private ObservableCollection<LogEntry> LogEntries { get; set; }
 
         public void DoAppend(LoggingEvent loggingEvent)
         {
@@ -78,8 +74,8 @@ namespace FishingFun
         private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             // Reset the timer so it only fires 100ms after the user stop dragging the window.
-            WindowSizeChangedTimer.Stop();
-            WindowSizeChangedTimer.Start();
+            windowSizeChangedTimer.Stop();
+            windowSizeChangedTimer.Start();
         }
 
         private void SizeChangedTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -135,8 +131,6 @@ namespace FishingFun
                         setImageBackgroundColour = true;
                         break;
                 }
-
-                ;
             });
         }
 
@@ -159,23 +153,21 @@ namespace FishingFun
 
         private void Play_Click(object sender, RoutedEventArgs e)
         {
-            if (bot == null)
-            {
-                WowProcess.PressKey(ConsoleKey.Spacebar);
-                Thread.Sleep(1500);
+            if (bot != null) return;
+            WowProcess.PressKey(ConsoleKey.Spacebar);
+            Thread.Sleep(1500);
 
-                SetButtonStates(false);
-                botThread = new Thread(BotThread);
-                botThread.Start();
+            SetButtonStates(false);
+            botThread = new Thread(BotThread);
+            botThread.Start();
 
-                // Hide cards after 10 minutes
-                var timer = new Timer { Interval = 1000 * 60 * 10, AutoReset = false };
-                timer.Elapsed += (s, ev) => Dispatch(() => LogFlipper.IsFlipped = GraphFlipper.IsFlipped = true);
-                timer.Start();
-            }
+            // Hide cards after 10 minutes
+            var timer = new Timer { Interval = 1000 * 60 * 10, AutoReset = false };
+            timer.Elapsed += (s, ev) => Dispatch(() => LogFlipper.IsFlipped = GraphFlipper.IsFlipped = true);
+            timer.Start();
         }
 
-        public void BotThread()
+        private void BotThread()
         {
             bot = new FishingBot(bobberFinder, biteWatcher, KeyChooser.CastKey,
                 new List<ConsoleKey> { ConsoleKey.D5, ConsoleKey.D6 });
@@ -209,7 +201,7 @@ namespace FishingFun
 
         private void Dispatch(Action action)
         {
-            Application.Current?.Dispatcher.BeginInvoke((Action)(() => action()));
+            Application.Current?.Dispatcher.BeginInvoke(action);
             Application.Current?.Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
         }
     }
